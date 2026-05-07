@@ -3,6 +3,7 @@ from typing import Any
 
 GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search"
 WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
+AQI_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
 
 WMO_CODES: dict[int, str] = {
     0: "Clear sky",
@@ -16,10 +17,10 @@ WMO_CODES: dict[int, str] = {
 }
 
 
-class WeatherService:
-    """Handles geocoding and weather data fetching from Open-Meteo."""
+class PlaceService:
+    """Handles geocoding, weather, and environmental data fetching from Open-Meteo."""
 
-    async def _geocode(self, location: str) -> tuple[float, float, str]:
+    async def _geocode(self, location: str) -> tuple[float, float, str, str]:
         """
         Resolve a location name to latitude/longitude.
 
@@ -27,7 +28,7 @@ class WeatherService:
             location: City or place name.
 
         Returns:
-            Tuple of (latitude, longitude, resolved_name).
+            Tuple of (latitude, longitude, resolved_name, timezone).
 
         Raises:
             ValueError: If the location cannot be found.
@@ -46,15 +47,30 @@ class WeatherService:
 
         result = results[0]
         name = f"{result['name']}, {result.get('country', '')}".strip(", ")
-        return result["latitude"], result["longitude"], name
+        return result["latitude"], result["longitude"], name, result.get("timezone", "UTC")
 
     def _describe_condition(self, wmo_code: int) -> str:
         """Map a WMO weather code to a human-readable description."""
         return WMO_CODES.get(wmo_code, f"Unknown condition (code {wmo_code})")
 
+    async def get_timezone(self, location: str) -> str:
+        """Fetch the local timezone for a location."""
+        _, _, resolved_name, timezone = await self._geocode(location)
+        return f"The local timezone for {resolved_name} is {timezone}."
+
+    async def get_air_quality(self, location: str) -> str:
+        """Fetch current air quality data."""
+        lat, lon, resolved_name, _ = await self._geocode(location)
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            params = {"latitude": lat, "longitude": lon, "current": "european_aqi,us_aqi,pm10,pm2_5"}
+            response = await client.get(AQI_URL, params=params)
+            response.raise_for_status()
+            data = response.json()["current"]
+        return f"Air Quality in {resolved_name}:\n  US AQI: {data['us_aqi']}\n  EU AQI: {data['european_aqi']}\n  PM2.5: {data['pm2_5']} µg/m³\n  PM10: {data['pm10']} µg/m³"
+
     async def get_current_weather(self, location: str) -> str:
         """
-        Fetch current weather conditions for a location.
+        Fetch current weather conditions including UV index.
 
         Args:
             location: City or place name.
@@ -62,7 +78,7 @@ class WeatherService:
         Returns:
             Formatted string of current conditions.
         """
-        lat, lon, resolved_name = await self._geocode(location)
+        lat, lon, resolved_name, _ = await self._geocode(location)
 
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(
@@ -71,6 +87,7 @@ class WeatherService:
                     "latitude": lat,
                     "longitude": lon,
                     "current": "temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code",
+                    "daily": "uv_index_max",
                     "timezone": "auto",
                 },
             )
@@ -79,14 +96,33 @@ class WeatherService:
 
         current = data["current"]
         condition = self._describe_condition(current["weather_code"])
+        uv_index = data.get("daily", {}).get("uv_index_max", [0])[0]
 
         return (
             f"Current weather in {resolved_name}:\n"
             f"  Condition:    {condition}\n"
             f"  Temperature:  {current['temperature_2m']}°C\n"
             f"  Humidity:     {current['relative_humidity_2m']}%\n"
-            f"  Wind speed:   {current['wind_speed_10m']} km/h"
+            f"  Wind speed:   {current['wind_speed_10m']} km/h\n"
+            f"  Max UV Today: {uv_index}"
         )
+
+    async def get_astronomy(self, location: str) -> str:
+        """Fetch sunrise and sunset times."""
+        lat, lon, resolved_name, _ = await self._geocode(location)
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            params = {
+                "latitude": lat,
+                "longitude": lon,
+                "daily": "sunrise,sunset",
+                "timezone": "auto",
+                "forecast_days": 1
+            }
+            response = await client.get(WEATHER_URL, params=params)
+            response.raise_for_status()
+            daily = response.json()["daily"]
+        
+        return f"Astronomy for {resolved_name}:\n  Sunrise: {daily['sunrise'][0]}\n  Sunset:  {daily['sunset'][0]}"
 
     async def get_forecast(self, location: str, days: int = 3) -> str:
         """
@@ -102,7 +138,7 @@ class WeatherService:
         if not 1 <= days <= 7:
             raise ValueError(f"Days must be between 1 and 7, got {days}.")
 
-        lat, lon, resolved_name = await self._geocode(location)
+        lat, lon, resolved_name, _ = await self._geocode(location)
 
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(

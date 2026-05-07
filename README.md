@@ -1,6 +1,6 @@
-# MCP Weather Server
+# MCP Place Intelligence Server
 
-A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that provides real-time weather data and forecasts via the [Open-Meteo API](https://open-meteo.com/) — no API key required.
+A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that provides real-time "place intelligence" — including weather, timezones, air quality, and astronomy data — via the [Open-Meteo API](https://open-meteo.com/). No API key required.
 
 ## What is MCP?
 
@@ -10,8 +10,11 @@ The Model Context Protocol is an open standard that lets LLMs call out to extern
 
 - No API keys or accounts required
 - Current conditions: temperature, humidity, wind speed, weather description
+- Environmental data: Air Quality Index (AQI) and UV Index
+- Astronomical data: Sunrise and sunset times
 - Daily forecast up to 7 days
-- Natural language weather summaries ready for LLM responses
+- Timezone lookup for any city
+- Natural language "place summaries" designed for LLM responses
 - Fully async with `httpx`, type-hinted throughout
 - Works with Claude Desktop, MCP Inspector, or any MCP-compatible client
 
@@ -87,14 +90,23 @@ Fully quit and relaunch Claude Desktop. A hammer icon near the chat input confir
 
 ## Tools
 
+### `get_timezone(location)`
+Returns the local timezone for a city (e.g., "Europe/Berlin").
+
+### `get_air_quality(location)`
+Returns current AQI (US and EU standards) and pollutant levels (PM2.5, PM10).
+
+### `get_astronomy(location)`
+Returns today's sunrise and sunset times for the location.
+
 ### `get_current_weather(location)`
-Returns current temperature, humidity, wind speed, and conditions for a given city.
+Returns current temperature, humidity, wind speed, and UV index.
 
 ### `get_forecast(location, days?)`
 Returns a daily forecast for 1–7 days (default: 3). Includes high/low temps and precipitation probability.
 
-### `get_weather_summary(location)`
-Returns a combined natural language summary of current conditions and a short-term outlook — designed to be relayed directly to a user by an LLM.
+### `get_place_summary(location)`
+Returns a comprehensive overview of a location, combining timezone, weather, air quality, and astronomy into one response.
 
 ## Credits
 

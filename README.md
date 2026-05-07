@@ -23,8 +23,8 @@ The Model Context Protocol is an open standard that lets LLMs call out to extern
 **Prerequisites:** Python 3.11+, Node.js (for MCP Inspector)
 
 ```bash
-git clone https://github.com/yourusername/mcp-weather-server.git
-cd mcp-weather-server
+git clone https://github.com/jrp54/mcp-place-intelligence-server.git
+cd mcp-place-intelligence-server
 
 python3 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
@@ -72,12 +72,12 @@ Add the following to your config (merge with any existing content):
 ```json
 {
   "mcpServers": {
-    "weather": {
+    "place-intelligence": {
       "command": "wsl",
       "args": [
         "-e",
-        "/home/yourusername/path/to/mcp-weather-server/.venv/bin/python",
-        "/home/yourusername/path/to/mcp-weather-server/server.py"
+        "/home/yourusername/path/to/mcp-place-intelligence-server/.venv/bin/python",
+        "/home/yourusername/path/to/mcp-place-intelligence-server/server.py"
       ]
     }
   }
@@ -87,6 +87,7 @@ Add the following to your config (merge with any existing content):
 Fully quit and relaunch Claude Desktop. A hammer icon near the chat input confirms the server connected successfully.
 
 > **Note:** Claude Desktop has a built-in weather widget that may respond to generic weather questions. To explicitly invoke this MCP server, ask Claude to *"use the weather MCP tool"* or reference a tool by name (e.g. *"use get_weather_summary for Berlin"*).
+> **Note:** Claude Desktop has a built-in weather widget that may respond to generic weather questions. To explicitly invoke this MCP server, ask Claude to *"use the place intelligence MCP tool"* or reference a tool by name (e.g. *"use get_place_summary for Berlin"*).
 
 ## Tools
 

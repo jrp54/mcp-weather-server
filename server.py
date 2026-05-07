@@ -1,6 +1,6 @@
 import asyncio
 from mcp.server.fastmcp import FastMCP
-from weather import PlaceService
+from place import PlaceService
 
 # Initialize FastMCP server
 mcp = FastMCP("PlaceServer")

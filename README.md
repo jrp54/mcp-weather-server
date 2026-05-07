@@ -38,7 +38,7 @@ The easiest way to verify the server is working without a full LLM client:
 
 ```bash
 source .venv/bin/activate
-npx @modelcontextprotocol/inspector python server.py
+npx @modelcontextprotocol/inspector python3 server.py
 ```
 
 Open the URL shown in your terminal, click **Connect**, then navigate to the **Tools** tab to call any tool manually.
@@ -60,9 +60,9 @@ Add the following to your config (merge with any existing content):
 ```json
 {
   "mcpServers": {
-    "weather": {
+    "place-intelligence": {
       "command": "python",
-      "args": ["/absolute/path/to/mcp-weather-server/server.py"]
+      "args": ["/absolute/path/to/mcp-place-intelligence-server/server.py"]
     }
   }
 }
@@ -76,7 +76,7 @@ Add the following to your config (merge with any existing content):
       "command": "wsl",
       "args": [
         "-e",
-        "/home/yourusername/path/to/mcp-place-intelligence-server/.venv/bin/python",
+        "/home/yourusername/path/to/mcp-place-intelligence-server/.venv/bin/python3",
         "/home/yourusername/path/to/mcp-place-intelligence-server/server.py"
       ]
     }
@@ -85,8 +85,6 @@ Add the following to your config (merge with any existing content):
 ```
 
 Fully quit and relaunch Claude Desktop. A hammer icon near the chat input confirms the server connected successfully.
-
-> **Note:** Claude Desktop has a built-in weather widget that may respond to generic weather questions. To explicitly invoke this MCP server, ask Claude to *"use the weather MCP tool"* or reference a tool by name (e.g. *"use get_weather_summary for Berlin"*).
 > **Note:** Claude Desktop has a built-in weather widget that may respond to generic weather questions. To explicitly invoke this MCP server, ask Claude to *"use the place intelligence MCP tool"* or reference a tool by name (e.g. *"use get_place_summary for Berlin"*).
 
 ## Tools
